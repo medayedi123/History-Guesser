@@ -1,0 +1,1793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>📜 History Guesser</title>
+  <style>
+    /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+       style.css  —  History Guesser  —  Vintage Atlas Theme
+       ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&family=Courier+Prime:wght@400;700&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #d6cdc0;
+      color: #2c241b;
+      font-family: 'Inter', -apple-system, sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      font-size: 15px;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 1280px;
+      height: 100%;
+      max-height: 900px;
+      background: #fcf7f0;
+      border-radius: 28px;
+      border: 1px solid #bfae9a;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 30px 80px rgba(44, 36, 27, 0.25), inset 0 1px 0 rgba(255, 247, 240, 0.6);
+      position: relative;
+    }
+
+    /* ─── top bar ─── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 24px;
+      background: #f4efe1;
+      border-bottom: 2px solid #d4c5b0;
+      flex-shrink: 0;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .topbar .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      font-weight: 600;
+      color: #3a2c21;
+      letter-spacing: 0.02em;
+    }
+    .topbar .brand .logo {
+      font-size: 24px;
+    }
+    .topbar .brand small {
+      font-family: 'Inter', sans-serif;
+      font-size: 12px;
+      font-weight: 400;
+      color: #8a7a6a;
+      letter-spacing: 0.04em;
+    }
+    .topbar-stats {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .topbar-stats .stat {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      color: #5a4e42;
+    }
+    .topbar-stats .stat .num {
+      color: #2c241b;
+      font-weight: 600;
+      min-width: 22px;
+      font-family: 'Courier Prime', monospace;
+      font-size: 15px;
+    }
+    .topbar-stats .stat .num.gold {
+      color: #a63a28;
+    }
+
+    /* ─── main ─── */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      min-height: 0;
+      overflow: hidden;
+      background: #fcf7f0;
+    }
+
+    /* ─── map area ─── */
+    .map-wrap {
+      flex: 1;
+      position: relative;
+      background: #fcf7f0;
+      overflow: hidden;
+      min-height: 0;
+    }
+    .map-wrap canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    /* ─── pin marker ─── */
+    .pin-marker {
+      position: absolute;
+      pointer-events: none;
+      z-index: 10;
+      font-size: 34px;
+      transform: translate(-50%, -100%);
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      filter: drop-shadow(0 4px 12px rgba(166, 58, 40, 0.4));
+    }
+    .pin-marker.bounce {
+      animation: pinBounce 0.6s ease;
+    }
+    @keyframes pinBounce {
+      0% { transform: translate(-50%, -100%) scale(0) rotate(-20deg); }
+      60% { transform: translate(-50%, -100%) scale(1.25) rotate(5deg); }
+      100% { transform: translate(-50%, -100%) scale(1) rotate(0deg); }
+    }
+
+    /* ─── setup overlay ─── */
+    .setup-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(252, 247, 240, 0.92);
+      backdrop-filter: blur(6px);
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .setup-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.96);
+    }
+    .setup-box {
+      background: #fcf7f0;
+      border: 1px solid #bfae9a;
+      border-radius: 24px;
+      padding: 32px 36px;
+      max-width: 520px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 16px 60px rgba(44, 36, 27, 0.15);
+    }
+    .setup-box h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px;
+      font-weight: 600;
+      color: #3a2c21;
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .setup-box .sub {
+      color: #6a5e52;
+      font-size: 14px;
+      margin-bottom: 22px;
+      border-bottom: 1px solid #e8ddd0;
+      padding-bottom: 14px;
+      font-weight: 400;
+    }
+    .setup-box .field {
+      margin-bottom: 18px;
+    }
+    .setup-box .field label {
+      display: block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #6a5e52;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    .setup-box .field .options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .setup-box .field .options button {
+      padding: 6px 18px;
+      border-radius: 40px;
+      border: 1px solid #bfae9a;
+      background: transparent;
+      color: #4a3c31;
+      font-size: 13px;
+      cursor: pointer;
+      transition: 0.2s;
+      touch-action: manipulation;
+      font-weight: 500;
+      font-family: 'Inter', sans-serif;
+    }
+    .setup-box .field .options button:hover {
+      background: #f4efe1;
+      border-color: #a09080;
+    }
+    .setup-box .field .options button.active {
+      background: #3a2c21;
+      border-color: #3a2c21;
+      color: #fcf7f0;
+    }
+    .setup-box .field .options button.active:hover {
+      background: #2c241b;
+    }
+    .setup-box .start-btn {
+      width: 100%;
+      padding: 13px;
+      border-radius: 40px;
+      border: none;
+      background: #3a2c21;
+      color: #fcf7f0;
+      font-family: 'Playfair Display', serif;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+      touch-action: manipulation;
+      margin-top: 4px;
+      letter-spacing: 0.02em;
+    }
+    .setup-box .start-btn:hover {
+      background: #2c241b;
+      transform: scale(1.01);
+      box-shadow: 0 4px 16px rgba(44, 36, 27, 0.2);
+    }
+    .setup-box .event-count {
+      text-align: center;
+      font-size: 13px;
+      color: #6a5e52;
+      margin-top: 12px;
+      font-weight: 400;
+    }
+
+    /* ─── game overlay ─── */
+    .game-overlay {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 92%;
+      max-width: 720px;
+      background: rgba(252, 247, 240, 0.95);
+      backdrop-filter: blur(8px);
+      border: 1px solid #bfae9a;
+      border-radius: 20px;
+      padding: 18px 22px 20px;
+      z-index: 20;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      box-shadow: 0 8px 40px rgba(44, 36, 27, 0.15);
+    }
+    .game-overlay.hidden {
+      opacity: 0;
+      transform: translateX(-50%) translateY(20px);
+      pointer-events: none;
+    }
+    .game-overlay .question-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    .game-overlay .question-row .year {
+      font-family: 'Courier Prime', monospace;
+      font-size: 30px;
+      font-weight: 700;
+      color: #a63a28;
+      letter-spacing: 0.02em;
+      font-variant-numeric: tabular-nums;
+    }
+    .game-overlay .question-row .year .label {
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      font-weight: 400;
+      color: #6a5e52;
+    }
+    .game-overlay .question-row .right-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .game-overlay .question-row .badge-group {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .game-overlay .question-row .badge-group .badge {
+      font-size: 11px;
+      padding: 2px 14px;
+      border-radius: 30px;
+      border: 1px solid #d4c5b0;
+      color: #4a3c31;
+      background: rgba(255, 255, 255, 0.4);
+      font-weight: 500;
+      text-transform: capitalize;
+    }
+    .game-overlay .question-row .badge-group .badge.cat {
+      border-color: #8a7a6a;
+      color: #3a2c21;
+    }
+    .game-overlay .question-row .badge-group .badge.diff {
+      border-color: #bfae9a;
+      color: #5a4e42;
+    }
+    /* ─── quit button ─── */
+    .game-overlay .question-row .quit-btn {
+      background: transparent;
+      border: 1px solid #bfae9a;
+      color: #6a5e52;
+      padding: 2px 12px;
+      border-radius: 30px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: 0.2s;
+      font-weight: 500;
+      font-family: 'Inter', sans-serif;
+      touch-action: manipulation;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+    .game-overlay .question-row .quit-btn:hover {
+      background: #f4efe1;
+      border-color: #a09080;
+      color: #3a2c21;
+    }
+
+    .game-overlay .options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .game-overlay .options button {
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid #d4c5b0;
+      background: rgba(255, 255, 255, 0.4);
+      color: #2c241b;
+      font-size: 14px;
+      cursor: pointer;
+      transition: 0.15s;
+      text-align: left;
+      touch-action: manipulation;
+      font-weight: 500;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      line-height: 1.3;
+      font-family: 'Inter', sans-serif;
+    }
+    .game-overlay .options button:hover:not(:disabled) {
+      background: #f4efe1;
+      border-color: #bfae9a;
+    }
+    .game-overlay .options button:disabled {
+      cursor: default;
+      opacity: 0.75;
+    }
+    .game-overlay .options button .letter {
+      font-weight: 600;
+      color: #6a5e52;
+      min-width: 22px;
+      font-size: 13px;
+      font-family: 'Courier Prime', monospace;
+    }
+    .game-overlay .options button.correct {
+      border-color: #2c7a4a;
+      background: rgba(44, 122, 74, 0.12);
+      color: #1a4a2a;
+    }
+    .game-overlay .options button.correct .letter {
+      color: #2c7a4a;
+    }
+    .game-overlay .options button.wrong {
+      border-color: #a63a28;
+      background: rgba(166, 58, 40, 0.08);
+      color: #7a2a1a;
+    }
+    .game-overlay .options button.wrong .letter {
+      color: #a63a28;
+    }
+    .game-overlay .options button.reveal {
+      border-color: #e8ddd0;
+      background: rgba(255, 255, 255, 0.2);
+      color: #6a5e52;
+    }
+
+    /* ─── feedback ─── */
+    .feedback {
+      margin-top: 12px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      display: none;
+      font-size: 14px;
+      line-height: 1.5;
+      border: 1px solid transparent;
+      font-family: 'Inter', sans-serif;
+    }
+    .feedback.show {
+      display: block;
+    }
+    .feedback.correct {
+      border-color: #2c7a4a;
+      background: rgba(44, 122, 74, 0.06);
+      color: #1a3a2a;
+    }
+    .feedback.wrong {
+      border-color: #a63a28;
+      background: rgba(166, 58, 40, 0.06);
+      color: #5a2a1a;
+    }
+    .feedback .fb-title {
+      font-weight: 600;
+      font-size: 16px;
+      font-family: 'Playfair Display', serif;
+    }
+    .feedback .fb-desc {
+      color: #3a2c21;
+      font-size: 14px;
+      margin-top: 2px;
+    }
+    .feedback .fb-fact {
+      color: #6a5e52;
+      font-size: 13px;
+      margin-top: 4px;
+      font-style: italic;
+    }
+    .feedback .fb-next {
+      margin-top: 10px;
+      padding: 6px 24px;
+      border-radius: 40px;
+      border: 1px solid #bfae9a;
+      background: transparent;
+      color: #2c241b;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: 0.2s;
+      touch-action: manipulation;
+      font-family: 'Inter', sans-serif;
+    }
+    .feedback .fb-next:hover {
+      background: #f4efe1;
+      border-color: #a09080;
+    }
+
+    /* ─── responsive ─── */
+    @media (max-width: 700px) {
+      body {
+        padding: 8px;
+      }
+      .app {
+        border-radius: 16px;
+        max-height: none;
+        height: 100vh;
+      }
+      .topbar {
+        padding: 10px 14px;
+      }
+      .topbar .brand {
+        font-size: 16px;
+      }
+      .topbar .brand small {
+        display: none;
+      }
+      .topbar-stats {
+        font-size: 12px;
+        gap: 12px;
+      }
+      .setup-box {
+        padding: 24px 18px;
+        margin: 10px;
+      }
+      .setup-box h2 {
+        font-size: 22px;
+      }
+      .game-overlay {
+        bottom: 10px;
+        padding: 14px 14px 16px;
+        width: 96%;
+      }
+      .game-overlay .question-row .year {
+        font-size: 22px;
+      }
+      .game-overlay .options {
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+      }
+      .game-overlay .options button {
+        font-size: 13px;
+        padding: 8px 10px;
+        min-height: 38px;
+      }
+      .feedback {
+        font-size: 13px;
+        padding: 10px 12px;
+      }
+      .pin-marker {
+        font-size: 28px;
+      }
+      .game-overlay .question-row .quit-btn {
+        font-size: 11px;
+        padding: 2px 10px;
+      }
+    }
+    @media (max-width: 420px) {
+      .game-overlay .options {
+        grid-template-columns: 1fr 1fr;
+        gap: 4px;
+      }
+      .game-overlay .options button {
+        font-size: 12px;
+        padding: 6px 8px;
+        min-height: 34px;
+        gap: 4px;
+      }
+      .game-overlay .question-row .year {
+        font-size: 18px;
+      }
+      .topbar-stats .stat .label {
+        display: none;
+      }
+      .topbar .brand {
+        font-size: 14px;
+      }
+    }
+
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #bfae9a;
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+  </style>
+</head>
+<body>
+
+<div class="app" id="app">
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">📜</span>
+      History Guesser
+      <small>· where & when?</small>
+    </div>
+    <div class="topbar-stats">
+      <span class="stat">🏆 <span class="num" id="scoreDisplay">0</span></span>
+      <span class="stat">🔥 <span class="num gold" id="streakDisplay">0</span></span>
+      <span class="stat">📌 <span class="num" id="roundDisplay">0</span></span>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="map-wrap" id="mapWrap">
+      <canvas id="mapCanvas"></canvas>
+      <div class="pin-marker" id="pinMarker">📍</div>
+
+      <!-- SETUP OVERLAY -->
+      <div class="setup-overlay" id="setupOverlay">
+        <div class="setup-box">
+          <h2>🗺️ History Guesser</h2>
+          <div class="sub">A pin drops. A date appears. You guess the event.</div>
+
+          <div class="field">
+            <label>🎯 Category</label>
+            <div class="options" id="categoryOptions"></div>
+          </div>
+
+          <div class="field">
+            <label>📊 Difficulty</label>
+            <div class="options" id="difficultyOptions"></div>
+          </div>
+
+          <button class="start-btn" id="startBtn">⚡ Start Guessing</button>
+          <div class="event-count" id="eventCountDisplay">Loading events…</div>
+        </div>
+      </div>
+
+      <!-- GAME OVERLAY -->
+      <div class="game-overlay hidden" id="gameOverlay">
+        <div class="question-row">
+          <span class="year" id="yearDisplay"><span class="label">📅</span> —</span>
+          <div class="right-group">
+            <span class="badge-group">
+              <span class="badge cat" id="catBadge">—</span>
+              <span class="badge diff" id="diffBadge">—</span>
+            </span>
+            <button class="quit-btn" id="btnQuit">✕ Quit</button>
+          </div>
+        </div>
+        <div class="options" id="optionsContainer">
+          <button data-index="0"><span class="letter">A.</span> <span class="text">—</span></button>
+          <button data-index="1"><span class="letter">B.</span> <span class="text">—</span></button>
+          <button data-index="2"><span class="letter">C.</span> <span class="text">—</span></button>
+          <button data-index="3"><span class="letter">D.</span> <span class="text">—</span></button>
+        </div>
+        <div class="feedback" id="feedback">
+          <div class="fb-title" id="fbTitle">✅ Correct!</div>
+          <div class="fb-desc" id="fbDesc">Event description</div>
+          <div class="fb-fact" id="fbFact">💡 Fun fact</div>
+          <button class="fb-next" id="fbNext">→ Next Event</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  //  script.js  —  History Guesser  —  with quit function
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  // ─── DOM refs ──────────────────────────────────────────────────────────
+  const canvas = document.getElementById('mapCanvas');
+  const ctx = canvas.getContext('2d');
+  const mapWrap = document.getElementById('mapWrap');
+  const pinMarker = document.getElementById('pinMarker');
+  const setupOverlay = document.getElementById('setupOverlay');
+  const gameOverlay = document.getElementById('gameOverlay');
+  const yearDisplay = document.getElementById('yearDisplay');
+  const catBadge = document.getElementById('catBadge');
+  const diffBadge = document.getElementById('diffBadge');
+  const optionsContainer = document.getElementById('optionsContainer');
+  const feedback = document.getElementById('feedback');
+  const fbTitle = document.getElementById('fbTitle');
+  const fbDesc = document.getElementById('fbDesc');
+  const fbFact = document.getElementById('fbFact');
+  const fbNext = document.getElementById('fbNext');
+  const scoreDisplay = document.getElementById('scoreDisplay');
+  const streakDisplay = document.getElementById('streakDisplay');
+  const roundDisplay = document.getElementById('roundDisplay');
+  const startBtn = document.getElementById('startBtn');
+  const categoryOptions = document.getElementById('categoryOptions');
+  const difficultyOptions = document.getElementById('difficultyOptions');
+  const eventCountDisplay = document.getElementById('eventCountDisplay');
+  const btnQuit = document.getElementById('btnQuit');
+
+  // ─── state ──────────────────────────────────────────────────────────────
+  let W = 0,
+    H = 0;
+  let dpr = 1;
+  let score = 0;
+  let streak = 0;
+  let round = 0;
+  let totalEvents = 0;
+  let selectedCategory = 'All';
+  let selectedDifficulty = 'All';
+  let currentEvent = null;
+  let currentOptions = [];
+  let isAnswered = false;
+  let gameActive = false;
+
+  // ─── map image ──────────────────────────────────────────────────────────
+  let mapImage = null;
+  let mapLoaded = false;
+
+  // ─── EVENT DATABASE (70+ events) ──────────────────────────────────────
+  const EVENTS = [{
+    id: 1,
+    name: 'Battle of Hastings',
+    year: 1066,
+    x: 0.445,
+    y: 0.395,
+    category: 'War',
+    difficulty: 'Medium',
+    description: 'Norman conquest of England began with this battle.',
+    funFact: 'King Harold was killed by an arrow to the eye — or so the Bayeux Tapestry suggests.'
+  }, {
+    id: 2,
+    name: 'Magna Carta Signed',
+    year: 1215,
+    x: 0.440,
+    y: 0.400,
+    category: 'Politics',
+    difficulty: 'Medium',
+    description: 'King John of England put his seal on this charter of rights.',
+    funFact: 'Only three clauses of the original Magna Carta are still law in the UK today.'
+  }, {
+    id: 3,
+    name: 'Printing Press Invented',
+    year: 1440,
+    x: 0.460,
+    y: 0.395,
+    category: 'Science',
+    difficulty: 'Medium',
+    description: 'Johannes Gutenberg introduced movable type to Europe.',
+    funFact: 'The Gutenberg Bible was the first major book printed in the West.'
+  }, {
+    id: 4,
+    name: 'Columbus Arrives in Americas',
+    year: 1492,
+    x: 0.195,
+    y: 0.320,
+    category: 'Exploration',
+    difficulty: 'Easy',
+    description: 'Christopher Columbus reached the islands of the Caribbean.',
+    funFact: 'Columbus never set foot on the mainland of North America.'
+  }, {
+    id: 5,
+    name: 'Mona Lisa Painted',
+    year: 1503,
+    x: 0.455,
+    y: 0.410,
+    category: 'Culture',
+    difficulty: 'Medium',
+    description: 'Leonardo da Vinci began painting the portrait of Lisa Gherardini.',
+    funFact: 'The Mona Lisa has no eyebrows — they were fashionable in Renaissance Florence.'
+  }, {
+    id: 6,
+    name: 'Magellan Circumnavigation',
+    year: 1522,
+    x: 0.365,
+    y: 0.430,
+    category: 'Exploration',
+    difficulty: 'Hard',
+    description: 'Magellan\'s expedition completed the first voyage around the world.',
+    funFact: 'Magellan himself died in the Philippines — only 18 of 270 crew members returned.'
+  }, {
+    id: 7,
+    name: 'Copernicus Heliocentric Theory',
+    year: 1543,
+    x: 0.470,
+    y: 0.400,
+    category: 'Science',
+    difficulty: 'Hard',
+    description: 'Nicolaus Copernicus published his theory that the Sun is at the center.',
+    funFact: 'Copernicus received his copy of the book on his deathbed.'
+  }, {
+    id: 8,
+    name: 'Jamestown Settlement',
+    year: 1607,
+    x: 0.180,
+    y: 0.355,
+    category: 'Exploration',
+    difficulty: 'Medium',
+    description: 'The first permanent English settlement in North America.',
+    funFact: 'Jamestown almost failed — the settlers arrived during a severe drought.'
+  }, {
+    id: 9,
+    name: 'Shakespeare\'s First Folio',
+    year: 1623,
+    x: 0.440,
+    y: 0.400,
+    category: 'Culture',
+    difficulty: 'Hard',
+    description: 'First collected edition of William Shakespeare\'s plays published.',
+    funFact: 'Without the First Folio, 18 of Shakespeare\'s plays would have been lost.'
+  }, {
+    id: 10,
+    name: 'Newton\'s Laws Published',
+    year: 1687,
+    x: 0.442,
+    y: 0.398,
+    category: 'Science',
+    difficulty: 'Hard',
+    description: 'Isaac Newton published "Principia" outlining the laws of motion.',
+    funFact: 'Newton was also obsessed with alchemy and wrote millions of words on it.'
+  }, {
+    id: 11,
+    name: 'Industrial Revolution Begins',
+    year: 1760,
+    x: 0.448,
+    y: 0.400,
+    category: 'Science',
+    difficulty: 'Medium',
+    description: 'The transition to new manufacturing processes in Britain.',
+    funFact: 'The term "Industrial Revolution" was popularized by historians in the 1880s.'
+  }, {
+    id: 12,
+    name: 'American Revolution Begins',
+    year: 1775,
+    x: 0.178,
+    y: 0.350,
+    category: 'War',
+    difficulty: 'Easy',
+    description: 'The American colonies declared independence from Britain.',
+    funFact: 'The Declaration of Independence was signed on July 4, 1776.'
+  }, {
+    id: 13,
+    name: 'Declaration of Independence',
+    year: 1776,
+    x: 0.178,
+    y: 0.350,
+    category: 'Politics',
+    difficulty: 'Easy',
+    description: 'The United States declared itself independent from British rule.',
+    funFact: 'John Hancock signed his name large so King George could read it without glasses.'
+  }, {
+    id: 14,
+    name: 'French Revolution Begins',
+    year: 1789,
+    x: 0.445,
+    y: 0.410,
+    category: 'Politics',
+    difficulty: 'Easy',
+    description: 'The storming of the Bastille marked the start of the French Revolution.',
+    funFact: 'The guillotine was promoted as a humane execution method — it was used until 1977.'
+  }, {
+    id: 15,
+    name: 'Lewis & Clark Expedition',
+    year: 1804,
+    x: 0.165,
+    y: 0.330,
+    category: 'Exploration',
+    difficulty: 'Medium',
+    description: 'Explored the western portion of North America after the Louisiana Purchase.',
+    funFact: 'They only saw one grizzly bear during the entire 8,000-mile journey.'
+  }, {
+    id: 16,
+    name: 'Beethoven\'s 9th Symphony',
+    year: 1824,
+    x: 0.460,
+    y: 0.395,
+    category: 'Culture',
+    difficulty: 'Hard',
+    description: 'Beethoven\'s final complete symphony premiered in Vienna.',
+    funFact: 'Beethoven was completely deaf when he conducted the premiere.'
+  }, {
+    id: 17,
+    name: 'Darwin\'s "On the Origin of Species"',
+    year: 1859,
+    x: 0.442,
+    y: 0.398,
+    category: 'Science',
+    difficulty: 'Hard',
+    description: 'Charles Darwin published his theory of evolution by natural selection.',
+    funFact: 'Darwin waited over 20 years to publish his theory, fearing the reaction.'
+  }, {
+    id: 18,
+    name: 'American Civil War Begins',
+    year: 1861,
+    x: 0.170,
+    y: 0.355,
+    category: 'War',
+    difficulty: 'Easy',
+    description: 'The Confederate attack on Fort Sumter started the American Civil War.',
+    funFact: 'More Americans died in the Civil War than in both World Wars combined.'
+  }, {
+    id: 19,
+    name: 'Emancipation Proclamation',
+    year: 1863,
+    x: 0.175,
+    y: 0.350,
+    category: 'Politics',
+    difficulty: 'Medium',
+    description: 'Lincoln declared all slaves in Confederate states to be free.',
+    funFact: 'The proclamation did not apply to slave-holding border states that remained in the Union.'
+  }, {
+    id: 20,
+    name: 'Suez Canal Opens',
+    year: 1869,
+    x: 0.470,
+    y: 0.525,
+    category: 'Exploration',
+    difficulty: 'Hard',
+    description: 'The canal connecting the Mediterranean to the Red Sea was completed.',
+    funFact: 'The Suez Canal shortened the sea route from Europe to Asia by about 7,000 km.'
+  }, {
+    id: 21,
+    name: 'Einstein\'s Special Relativity',
+    year: 1905,
+    x: 0.465,
+    y: 0.400,
+    category: 'Science',
+    difficulty: 'Hard',
+    description: 'Albert Einstein published his theory of special relativity.',
+    funFact: 'Einstein\'s famous equation E=mc² is actually a simplified version of the full equation.'
+  }, {
+    id: 22,
+    name: 'First Flight (Wright Brothers)',
+    year: 1903,
+    x: 0.180,
+    y: 0.345,
+    category: 'Science',
+    difficulty: 'Easy',
+    description: 'Orville and Wilbur Wright achieved the first powered, controlled flight.',
+    funFact: 'The flight lasted only 12 seconds and covered 120 feet.'
+  }, {
+    id: 23,
+    name: 'Titanic Sinks',
+    year: 1912,
+    x: 0.380,
+    y: 0.420,
+    category: 'Disaster',
+    difficulty: 'Easy',
+    description: 'The RMS Titanic struck an iceberg and sank on its maiden voyage.',
+    funFact: 'Titanic had 20 lifeboats — enough for only about half the passengers.'
+  }, {
+    id: 24,
+    name: 'WWI Begins',
+    year: 1914,
+    x: 0.470,
+    y: 0.395,
+    category: 'War',
+    difficulty: 'Easy',
+    description: 'The assassination of Archduke Franz Ferdinand triggered World War I.',
+    funFact: 'The Christmas Truce of 1914 saw soldiers on both sides cease fire and exchange gifts.'
+  }, {
+    id: 25,
+    name: 'Russian Revolution',
+    year: 1917,
+    x: 0.530,
+    y: 0.390,
+    category: 'Politics',
+    difficulty: 'Medium',
+    description: 'The Bolsheviks overthrew the Russian provisional government.',
+    funFact: 'The revolution led to the execution of Tsar Nicholas II and his entire family.'
+  }, {
+    id: 26,
+    name: 'Spanish Flu Pandemic',
+    year: 1918,
+    x: 0.500,
+    y: 0.400,
+    category: 'Disaster',
+    difficulty: 'Medium',
+    description: 'The deadliest pandemic in history infected 500 million people.',
+    funFact: 'It was called "Spanish Flu" because Spain was neutral and reported it freely.'
+  }, {
+    id: 27,
+    name: 'Women\'s Suffrage (US)',
+    year: 1920,
+    x: 0.178,
+    y: 0.350,
+    category: 'Politics',
+    difficulty: 'Medium',
+    description: 'The 19th Amendment granted American women the right to vote.',
+    funFact: 'Tennessee was the deciding state — the vote passed by a single vote.'
+  }, {
+    id: 28,
+    name: 'Wall Street Crash',
+    year: 1929,
+    x: 0.175,
+    y: 0.345,
+    category: 'Disaster',
+    difficulty: 'Medium',
+    description: 'The stock market crash that triggered the Great Depression.',
+    funFact: 'On Black Tuesday, the market lost $14 billion in a single day.'
+  }, {
+    id: 29,
+    name: 'WWII Begins',
+    year: 1939,
+    x: 0.475,
+    y: 0.400,
+    category: 'War',
+    difficulty: 'Easy',
+    description: 'Germany invaded Poland, starting World War II in Europe.',
+    funFact: 'Poland was invaded by both Germany and the Soviet Union within weeks.'
+  }, {
+    id: 30,
+    name: 'Penicillin Discovery',
+    year: 1928,
+    x: 0.442,
+    y: 0.398,
+    category: 'Science',
+    difficulty: 'Hard',
+    description: 'Alexander Fleming discovered the antibiotic properties of penicillin.',
+    funFact: 'Fleming\'s discovery was accidental — a contaminated petri dish led to it.'
+  }, {
+    id: 31,
+    name: 'D-Day Landings',
+    year: 1944,
+    x: 0.438,
+    y: 0.415,
+    category: 'War',
+    difficulty: 'Medium',
+    description: 'Allied forces invaded Normandy, France, on June 6, 1944.',
+    funFact: 'Over 156,000 troops landed on the beaches of Normandy that day.'
+  }, {
+    id: 32,
+    name: 'UN Founded',
+    year: 1945,
+    x: 0.178,
+    y: 0.340,
+    category: 'Politics',
+    difficulty: 'Medium',
+    description: 'The United Nations was established after World War II.',
+    funFact: 'The UN had 51 original member states — now it has 193.'
+  }, {
+    id: 33,
+    name: 'Hiroshima Bombing',
+    year: 1945,
+    x: 0.615,
+    y: 0.330,
+    category: 'War',
+    difficulty: 'Hard',
+    description: 'The US dropped an atomic bomb on Hiroshima, Japan.',
+    funFact: 'The bomb "Little Boy" killed an estimated 140,000 people by the end of 1945.'
+  }, {
+    id: 34,
+    name: 'Jackie Robinson Debuts',
+    year: 1947,
+    x: 0.178,
+    y: 0.345,
+    category: 'Sports',
+    difficulty: 'Hard',
+    description: 'Jackie Robinson broke the color barrier in Major League Baseball.',
+    funFact: 'Robinson\'s number 42 is retired by every MLB team in his honor.'
+  }, {
+    id: 35,
+    name: 'Cold War Begins',
+    year: 1947,
+    x: 0.450,
+    y: 0.400,
+    category: 'Politics',
+    difficulty: 'Medium',
+    description: 'The geopolitical tension between the US and Soviet Union emerged.',
+    funFact: 'The Cold War lasted for over 40 years, until the fall of the Soviet Union in 1991.'
+  }, {
+    id: 36,
+    name: 'DNA Structure Discovered',
+    year: 1953,
+    x: 0.442,
+    y: 0.398,
+    category: 'Science',
+    difficulty: 'Hard',
+    description: 'Watson and Crick proposed the double helix structure of DNA.',
+    funFact: 'Rosalind Franklin\'s X-ray images were crucial to the discovery but she was not credited.'
+  }, {
+    id: 37,
+    name: 'Everest Climbed',
+    year: 1953,
+    x: 0.560,
+    y: 0.295,
+    category: 'Exploration',
+    difficulty: 'Hard',
+    description: 'Edmund Hillary and Tenzing Norgay reached the summit of Everest.',
+    funFact: 'Hillary and Norgay were only 100 feet from the summit when they decided to continue.'
+  }, {
+    id: 38,
+    name: 'Vietnam War Begins',
+    year: 1955,
+    x: 0.610,
+    y: 0.420,
+    category: 'War',
+    difficulty: 'Medium',
+    description: 'US involvement in Vietnam escalated with the Vietnam War.',
+    funFact: 'The Vietnam War is sometimes called the "first television war."'
+  }, {
+    id: 39,
+    name: 'Space Race (Sputnik)',
+    year: 1957,
+    x: 0.530,
+    y: 0.390,
+    category: 'Science',
+    difficulty: 'Hard',
+    description: 'The Soviet Union launched Sputnik 1, the first artificial satellite.',
+    funFact: 'Sputnik was the size of a beach ball and weighed 184 pounds.'
+  }, {
+    id: 40,
+    name: 'First Moon Landing',
+    year: 1969,
+    x: 0.180,
+    y: 0.310,
+    category: 'Science',
+    difficulty: 'Easy',
+    description: 'Neil Armstrong and Buzz Aldrin walked on the Moon.',
+    funFact: 'Armstrong\'s first words on the moon were "That\'s one small step for man, one giant leap for mankind."'
+  }, {
+    id: 41,
+    name: 'Woodstock Festival',
+    year: 1969,
+    x: 0.175,
+    y: 0.340,
+    category: 'Culture',
+    difficulty: 'Medium',
+    description: 'The iconic music festival held in Bethel, New York.',
+    funFact: 'Woodstock actually took place at Max Yasgur\'s farm, not in the town of Woodstock.'
+  }, {
+    id: 42,
+    name: 'Ali vs Frazier (Fight of the Century)',
+    year: 1971,
+    x: 0.178,
+    y: 0.345,
+    category: 'Sports',
+    difficulty: 'Hard',
+    description: 'Muhammad Ali faced Joe Frazier in one of boxing\'s greatest fights.',
+    funFact: 'The fight was watched by an estimated 300 million people worldwide.'
+  }, {
+    id: 43,
+    name: 'Microsoft Founded',
+    year: 1975,
+    x: 0.180,
+    y: 0.340,
+    category: 'Business',
+    difficulty: 'Hard',
+    description: 'Bill Gates and Paul Allen founded Microsoft Corporation.',
+    funFact: 'Microsoft\'s first product was a BASIC interpreter for the Altair 8800.'
+  }, {
+    id: 44,
+    name: 'Apple Founded',
+    year: 1976,
+    x: 0.185,
+    y: 0.350,
+    category: 'Business',
+    difficulty: 'Hard',
+    description: 'Steve Jobs, Steve Wozniak, and Ronald Wayne founded Apple Computer.',
+    funFact: 'Apple\'s first logo was a detailed illustration of Isaac Newton sitting under a tree.'
+  }, {
+    id: 45,
+    name: 'Star Wars Released',
+    year: 1977,
+    x: 0.185,
+    y: 0.350,
+    category: 'Culture',
+    difficulty: 'Medium',
+    description: 'George Lucas\'s Star Wars revolutionized science fiction cinema.',
+    funFact: 'Star Wars was made on a budget of just $11 million and earned over $775 million.'
+  }, {
+    id: 46,
+    name: 'Internet Protocol (TCP/IP)',
+    year: 1983,
+    x: 0.180,
+    y: 0.340,
+    category: 'Science',
+    difficulty: 'Hard',
+    description: 'The adoption of TCP/IP protocols standardized the Internet.',
+    funFact: 'The term "Internet" was first used in 1974 in a paper by Vint Cerf and Bob Kahn.'
+  }, {
+    id: 47,
+    name: 'Chernobyl Disaster',
+    year: 1986,
+    x: 0.520,
+    y: 0.395,
+    category: 'Disaster',
+    difficulty: 'Medium',
+    description: 'A nuclear reactor explosion in Ukraine, then part of the Soviet Union.',
+    funFact: 'The Chernobyl exclusion zone is still largely uninhabited today.'
+  }, {
+    id: 48,
+    name: 'Fall of Berlin Wall',
+    year: 1989,
+    x: 0.460,
+    y: 0.395,
+    category: 'Politics',
+    difficulty: 'Easy',
+    description: 'The Berlin Wall fell, symbolizing the end of the Cold War.',
+    funFact: 'Thousands of East Germans poured into West Berlin on that night.'
+  }, {
+    id: 49,
+    name: 'Gulf War Begins',
+    year: 1991,
+    x: 0.470,
+    y: 0.510,
+    category: 'War',
+    difficulty: 'Medium',
+    description: 'A US-led coalition liberated Kuwait from Iraqi occupation.',
+    funFact: 'The Gulf War was the first major conflict broadcast live on television.'
+  }, {
+    id: 50,
+    name: 'Apartheid Ends (South Africa)',
+    year: 1994,
+    x: 0.465,
+    y: 0.560,
+    category: 'Politics',
+    difficulty: 'Hard',
+    description: 'Nelson Mandela became the first Black president of South Africa.',
+    funFact: 'Mandela spent 27 years in prison before becoming president.'
+  }, {
+    id: 51,
+    name: 'Human Genome Project',
+    year: 2003,
+    x: 0.180,
+    y: 0.340,
+    category: 'Science',
+    difficulty: 'Hard',
+    description: 'The complete mapping of the human genome was announced.',
+    funFact: 'The Human Genome Project cost about $2.7 billion and took 13 years.'
+  }, {
+    id: 52,
+    name: '9/11 Attacks',
+    year: 2001,
+    x: 0.178,
+    y: 0.345,
+    category: 'Disaster',
+    difficulty: 'Easy',
+    description: 'Terrorist attacks on the World Trade Center and the Pentagon.',
+    funFact: 'The attacks killed 2,977 people and injured over 6,000 others.'
+  }, {
+    id: 53,
+    name: 'Great Depression Begins',
+    year: 1929,
+    x: 0.175,
+    y: 0.345,
+    category: 'Business',
+    difficulty: 'Medium',
+    description: 'The global economic downturn that started with the stock market crash.',
+    funFact: 'At the peak of the Great Depression, US unemployment reached 25%.'
+  }, {
+    id: 54,
+    name: 'First Modern Olympics',
+    year: 1896,
+    x: 0.460,
+    y: 0.425,
+    category: 'Sports',
+    difficulty: 'Hard',
+    description: 'The first modern Olympic Games were held in Athens, Greece.',
+    funFact: 'Only 14 countries participated in the first modern Olympics.'
+  }, {
+    id: 55,
+    name: 'Jazz Age Emerges',
+    year: 1920,
+    x: 0.178,
+    y: 0.345,
+    category: 'Culture',
+    difficulty: 'Hard',
+    description: 'The 1920s saw the rise of jazz music and cultural change in America.',
+    funFact: 'The Jazz Age was also called the "Roaring Twenties."'
+  }, {
+    id: 56,
+    name: 'Black Death Arrives in Europe',
+    year: 1347,
+    x: 0.460,
+    y: 0.410,
+    category: 'Disaster',
+    difficulty: 'Hard',
+    description: 'The bubonic plague pandemic reached Europe, killing tens of millions.',
+    funFact: 'The plague killed an estimated 30-60% of Europe\'s population.'
+  }, {
+    id: 57,
+    name: 'Lisbon Earthquake',
+    year: 1755,
+    x: 0.365,
+    y: 0.435,
+    category: 'Disaster',
+    difficulty: 'Hard',
+    description: 'A devastating earthquake struck Lisbon, Portugal, on All Saints\' Day.',
+    funFact: 'The earthquake caused a tsunami and fires, killing up to 100,000 people.'
+  }, {
+    id: 58,
+    name: 'East India Company Founded',
+    year: 1600,
+    x: 0.440,
+    y: 0.400,
+    category: 'Business',
+    difficulty: 'Hard',
+    description: 'The English East India Company was chartered to trade in the East Indies.',
+    funFact: 'The East India Company ruled India for over 100 years.'
+  }, {
+    id: 59,
+    name: 'Ford Model T Introduced',
+    year: 1908,
+    x: 0.180,
+    y: 0.340,
+    category: 'Business',
+    difficulty: 'Hard',
+    description: 'Henry Ford introduced the Model T, the first affordable automobile.',
+    funFact: 'The Model T was produced from 1908 to 1927, with over 15 million sold.'
+  }, {
+    id: 60,
+    name: 'Civil Rights Act (US)',
+    year: 1964,
+    x: 0.178,
+    y: 0.350,
+    category: 'Politics',
+    difficulty: 'Medium',
+    description: 'The US Civil Rights Act of 1964 outlawed discrimination based on race.',
+    funFact: 'The act was signed into law by President Lyndon B. Johnson.'
+  }, {
+    id: 61,
+    name: 'Cook Discovers Australia',
+    year: 1770,
+    x: 0.775,
+    y: 0.570,
+    category: 'Exploration',
+    difficulty: 'Hard',
+    description: 'Captain James Cook charted the eastern coast of Australia.',
+    funFact: 'Cook\'s ship, the Endeavour, was a converted coal ship.'
+  }, {
+    id: 62,
+    name: 'World Cup First Held',
+    year: 1930,
+    x: 0.365,
+    y: 0.430,
+    category: 'Sports',
+    difficulty: 'Hard',
+    description: 'The first FIFA World Cup was held in Uruguay.',
+    funFact: '13 teams participated in the first World Cup, and Uruguay won.'
+  }, {
+    id: 63,
+    name: 'French Revolution Ends (Napoleon)',
+    year: 1799,
+    x: 0.445,
+    y: 0.410,
+    category: 'Politics',
+    difficulty: 'Hard',
+    description: 'Napoleon Bonaparte rose to power, ending the French Revolution.',
+    funFact: 'Napoleon was not actually short — he was about 5\'7", average for the time.'
+  }, {
+    id: 64,
+    name: 'Darwin\'s Voyage on HMS Beagle',
+    year: 1831,
+    x: 0.440,
+    y: 0.398,
+    category: 'Science',
+    difficulty: 'Hard',
+    description: 'Charles Darwin set sail on the HMS Beagle, leading to his theory of evolution.',
+    funFact: 'The voyage lasted 5 years and took Darwin around the world.'
+  }, {
+    id: 65,
+    name: 'First Film Screening',
+    year: 1895,
+    x: 0.445,
+    y: 0.410,
+    category: 'Culture',
+    difficulty: 'Hard',
+    description: 'The Lumière brothers held the first public film screening in Paris.',
+    funFact: 'The first film showed workers leaving the factory — it was about 50 seconds long.'
+  }, {
+    id: 66,
+    name: 'Stock Exchange Founded (NYSE)',
+    year: 1792,
+    x: 0.178,
+    y: 0.345,
+    category: 'Business',
+    difficulty: 'Hard',
+    description: 'The New York Stock Exchange was founded by 24 stockbrokers.',
+    funFact: 'The first traded stock on the NYSE was the Bank of New York.'
+  }, {
+    id: 67,
+    name: 'Renaissance Begins',
+    year: 1400,
+    x: 0.455,
+    y: 0.410,
+    category: 'Culture',
+    difficulty: 'Hard',
+    description: 'The Renaissance period of European cultural, artistic, and political rebirth.',
+    funFact: 'The term "Renaissance" means "rebirth" in French.'
+  }, {
+    id: 68,
+    name: 'US Constitution Signed',
+    year: 1787,
+    x: 0.178,
+    y: 0.350,
+    category: 'Politics',
+    difficulty: 'Medium',
+    description: 'The United States Constitution was signed in Philadelphia.',
+    funFact: 'The Constitution has been amended 27 times, with the first 10 being the Bill of Rights.'
+  }, {
+    id: 69,
+    name: 'First Transcontinental Railroad (US)',
+    year: 1869,
+    x: 0.170,
+    y: 0.340,
+    category: 'Exploration',
+    difficulty: 'Hard',
+    description: 'The first transcontinental railroad in the US was completed.',
+    funFact: 'The railroad connected the east and west coasts, revolutionizing travel.'
+  }, {
+    id: 70,
+    name: 'Challenger Disaster',
+    year: 1986,
+    x: 0.180,
+    y: 0.310,
+    category: 'Disaster',
+    difficulty: 'Hard',
+    description: 'The Space Shuttle Challenger exploded 73 seconds after launch.',
+    funFact: 'The disaster was watched live by millions, including schoolchildren.'
+  }];
+
+  // ─── helpers ──────────────────────────────────────────────────────────
+  function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+  function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+  // ─── map rendering ────────────────────────────────────────────────────
+
+  function drawMap() {
+    const cw = canvas.width / dpr;
+    const ch = canvas.height / dpr;
+    ctx.clearRect(0, 0, cw, ch);
+
+    // ── parchment background ──
+    const grad = ctx.createRadialGradient(cw / 2, ch / 2, 0, cw / 2, ch / 2, cw * 0.75);
+    grad.addColorStop(0, '#fdf8f0');
+    grad.addColorStop(0.7, '#f5efe4');
+    grad.addColorStop(1, '#e8ddd0');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, cw, ch);
+
+    // ── draw the map image ──
+    if (mapLoaded && mapImage) {
+      ctx.drawImage(mapImage, 0, 0, cw, ch);
+    } else {
+      // fallback: show a message
+      ctx.fillStyle = '#3a2c21';
+      ctx.font = '18px "Playfair Display", serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🌍 Loading map...', cw / 2, ch / 2);
+    }
+
+    // ── compass rose ──
+    const cx = 60,
+      cy = ch - 60,
+      cr = 28;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.strokeStyle = 'rgba(106, 94, 82, 0.5)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.arc(0, 0, cr, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-cr, 0);
+    ctx.lineTo(cr, 0);
+    ctx.moveTo(0, -cr);
+    ctx.lineTo(0, cr);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-cr * 0.7, -cr * 0.7);
+    ctx.lineTo(cr * 0.7, cr * 0.7);
+    ctx.moveTo(cr * 0.7, -cr * 0.7);
+    ctx.lineTo(-cr * 0.7, cr * 0.7);
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(58, 44, 33, 0.6)';
+    ctx.font = 'bold 14px "Playfair Display", serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('N', 0, -cr - 14);
+    ctx.restore();
+
+    // ── title ──
+    ctx.fillStyle = 'rgba(58, 44, 33, 0.12)';
+    ctx.font = 'italic 20px "Playfair Display", serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText('~ Historia Mundi ~', 24, 16);
+  }
+
+  // ─── load map image ──────────────────────────────────────────────────
+  function loadMapImage() {
+    const img = new Image();
+    // Use the local file you downloaded as img.jpg
+    img.src = 'img.png';
+    img.onload = function() {
+      mapImage = img;
+      mapLoaded = true;
+      if (W && H) drawMap();
+    };
+    img.onerror = function() {
+      console.warn('Could not load img.jpg. Make sure the file is in the same folder as this HTML.');
+      // Try the online URL as a fallback
+      const fallbackImg = new Image();
+      fallbackImg.crossOrigin = 'anonymous';
+      fallbackImg.src = 'https://fun-play.co.uk/wp-content/uploads/Playground-Marking-World-Map-With-Oceans-with-background.png';
+      fallbackImg.onload = function() {
+        mapImage = fallbackImg;
+        mapLoaded = true;
+        if (W && H) drawMap();
+      };
+      fallbackImg.onerror = function() {
+        console.warn('Fallback image also failed. Using placeholder.');
+        mapLoaded = false;
+        drawMap();
+      };
+    };
+  }
+
+  // ─── resize ──────────────────────────────────────────────────────────
+  function resizeMap() {
+    const rect = mapWrap.getBoundingClientRect();
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = rect.width;
+    H = rect.height;
+    canvas.width = W * dpr;
+    canvas.height = H * dpr;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.scale(dpr, dpr);
+    drawMap();
+  }
+
+  // ─── game logic ──────────────────────────────────────────────────────
+
+  function getFilteredEvents() {
+    let filtered = EVENTS.slice();
+    if (selectedCategory !== 'All') {
+      filtered = filtered.filter(e => e.category === selectedCategory);
+    }
+    if (selectedDifficulty !== 'All') {
+      filtered = filtered.filter(e => e.difficulty === selectedDifficulty);
+    }
+    return filtered;
+  }
+
+  function getCategories() {
+    const cats = new Set(EVENTS.map(e => e.category));
+    return ['All', ...Array.from(cats).sort()];
+  }
+
+  function getDifficulties() {
+    const diffs = new Set(EVENTS.map(e => e.difficulty));
+    return ['All', ...Array.from(diffs).sort()];
+  }
+
+  function generateOptions(correctEvent, pool) {
+    const wrongs = pool.filter(e => e.id !== correctEvent.id);
+    shuffle(wrongs);
+    const selected = wrongs.slice(0, 3);
+    while (selected.length < 3) {
+      const fallback = EVENTS.filter(e => e.id !== correctEvent.id && !selected.includes(e));
+      if (fallback.length === 0) break;
+      selected.push(pick(fallback));
+    }
+    const options = [correctEvent, ...selected];
+    shuffle(options);
+    return options;
+  }
+
+  // ─── quit game ──────────────────────────────────────────────────────
+  function quitGame() {
+    if (!gameActive) return;
+    if (confirm('Quit the game and go back to setup?')) {
+      gameActive = false;
+      isAnswered = false;
+      setupOverlay.classList.remove('hidden');
+      gameOverlay.classList.add('hidden');
+      feedback.classList.remove('show', 'correct', 'wrong');
+      pinMarker.style.display = 'none';
+      // Reset answer buttons
+      optionsContainer.querySelectorAll('button').forEach(b => b.disabled = false);
+      // Reset feedback next button
+      fbNext.style.display = 'none';
+    }
+  }
+
+  function startGame() {
+    const filtered = getFilteredEvents();
+    if (filtered.length < 2) {
+      alert('Not enough events! Try a broader category or difficulty.');
+      return;
+    }
+    totalEvents = filtered.length;
+    eventCountDisplay.textContent = `📌 ${filtered.length} events available`;
+    setupOverlay.classList.add('hidden');
+    gameOverlay.classList.remove('hidden');
+    gameActive = true;
+    round = 0;
+    score = 0;
+    streak = 0;
+    pinMarker.style.display = 'block';
+    updateStats();
+    nextRound();
+  }
+
+  function nextRound() {
+    if (!gameActive) return;
+    const filtered = getFilteredEvents();
+    if (filtered.length < 2) {
+      alert('Not enough events! Please restart with broader filters.');
+      return;
+    }
+    round++;
+    isAnswered = false;
+    feedback.classList.remove('show', 'correct', 'wrong');
+
+    currentEvent = pick(filtered);
+    currentOptions = generateOptions(currentEvent, filtered);
+
+    yearDisplay.innerHTML = `<span class="label">📅</span> ${currentEvent.year}`;
+    catBadge.textContent = currentEvent.category;
+    diffBadge.textContent = currentEvent.difficulty;
+
+    const buttons = optionsContainer.querySelectorAll('button');
+    const labels = ['A', 'B', 'C', 'D'];
+    buttons.forEach((btn, idx) => {
+      const opt = currentOptions[idx];
+      btn.querySelector('.text').textContent = opt.name;
+      btn.dataset.id = opt.id;
+      btn.disabled = false;
+      btn.className = '';
+      btn.querySelector('.letter').textContent = labels[idx] + '.';
+    });
+
+    placePin(currentEvent.x, currentEvent.y);
+    fbNext.style.display = 'none';
+    updateStats();
+    drawMap();
+  }
+
+  function placePin(x, y) {
+    const px = x * W;
+    const py = y * H;
+    pinMarker.style.left = px + 'px';
+    pinMarker.style.top = py + 'px';
+    pinMarker.classList.remove('bounce');
+    void pinMarker.offsetWidth;
+    pinMarker.classList.add('bounce');
+  }
+
+  function handleAnswer(index) {
+    if (isAnswered || !gameActive) return;
+    const buttons = optionsContainer.querySelectorAll('button');
+    const selectedBtn = buttons[index];
+    const selectedId = parseInt(selectedBtn.dataset.id);
+    const isCorrect = selectedId === currentEvent.id;
+    isAnswered = true;
+
+    buttons.forEach(b => b.disabled = true);
+
+    buttons.forEach((btn) => {
+      const id = parseInt(btn.dataset.id);
+      if (id === currentEvent.id) {
+        btn.classList.add('correct');
+      } else if (id === selectedId && !isCorrect) {
+        btn.classList.add('wrong');
+      } else {
+        btn.classList.add('reveal');
+      }
+    });
+
+    if (isCorrect) {
+      score++;
+      streak++;
+      feedback.className = 'feedback show correct';
+      fbTitle.textContent = '✅ Correct!';
+    } else {
+      streak = 0;
+      feedback.className = 'feedback show wrong';
+      fbTitle.textContent = '❌ Not quite.';
+    }
+    fbDesc.textContent = currentEvent.description;
+    fbFact.textContent = '💡 ' + currentEvent.funFact;
+    fbNext.style.display = 'inline-block';
+    updateStats();
+  }
+
+  function updateStats() {
+    scoreDisplay.textContent = score;
+    streakDisplay.textContent = streak;
+    roundDisplay.textContent = round;
+  }
+
+  // ─── setup UI ──────────────────────────────────────────────────────
+
+  function buildSetupUI() {
+    const cats = getCategories();
+    categoryOptions.innerHTML = '';
+    cats.forEach(cat => {
+      const btn = document.createElement('button');
+      btn.textContent = cat;
+      btn.dataset.value = cat;
+      if (cat === 'All') btn.classList.add('active');
+      btn.addEventListener('click', () => {
+        categoryOptions.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedCategory = cat;
+        updateEventCount();
+      });
+      categoryOptions.appendChild(btn);
+    });
+
+    const diffs = getDifficulties();
+    difficultyOptions.innerHTML = '';
+    diffs.forEach(diff => {
+      const btn = document.createElement('button');
+      btn.textContent = diff;
+      btn.dataset.value = diff;
+      if (diff === 'All') btn.classList.add('active');
+      btn.addEventListener('click', () => {
+        difficultyOptions.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedDifficulty = diff;
+        updateEventCount();
+      });
+      difficultyOptions.appendChild(btn);
+    });
+    updateEventCount();
+  }
+
+  function updateEventCount() {
+    const filtered = getFilteredEvents();
+    eventCountDisplay.textContent = `📌 ${filtered.length} events available`;
+  }
+
+  // ─── init ──────────────────────────────────────────────────────────
+
+  function init() {
+    loadMapImage();
+    resizeMap();
+    buildSetupUI();
+
+    optionsContainer.querySelectorAll('button').forEach((btn, idx) => {
+      btn.addEventListener('click', () => handleAnswer(idx));
+      btn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        handleAnswer(idx);
+      });
+    });
+
+    fbNext.addEventListener('click', nextRound);
+    fbNext.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      nextRound();
+    });
+
+    startBtn.addEventListener('click', startGame);
+    startBtn.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      startGame();
+    });
+
+    // ── quit button ──
+    btnQuit.addEventListener('click', quitGame);
+    btnQuit.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      quitGame();
+    });
+
+    const ro = new ResizeObserver(() => {
+      resizeMap();
+      if (currentEvent) placePin(currentEvent.x, currentEvent.y);
+    });
+    ro.observe(mapWrap);
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        quitGame();
+        return;
+      }
+      if (!gameActive || isAnswered) return;
+      if (e.key === '1' || e.key === 'a' || e.key === 'A') handleAnswer(0);
+      if (e.key === '2' || e.key === 'b' || e.key === 'B') handleAnswer(1);
+      if (e.key === '3' || e.key === 'c' || e.key === 'C') handleAnswer(2);
+      if (e.key === '4' || e.key === 'd' || e.key === 'D') handleAnswer(3);
+      if (e.key === 'Enter' && feedback.classList.contains('show')) {
+        nextRound();
+      }
+    });
+
+    console.log('📜 History Guesser loaded with your local map image (img.jpg).');
+    console.log(`📌 ${EVENTS.length} events loaded.`);
+    console.log('⌨️  1-4 or A-D to answer · Enter for next · Escape to quit');
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+  window.addEventListener('resize', () => { resizeMap(); });
+
+  window.__history = { EVENTS, getFilteredEvents, currentEvent };
+</script>
+</body>
+</html>
